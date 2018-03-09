@@ -38,6 +38,10 @@ uses crt;
 	procedure CLS;
 	function  WaitKey:string;
 	function  GetKey:string;
+	
+	{3rd party stuff}
+	procedure turn_off_cursor;
+	procedure turn_on_cursor;
 
 
 
@@ -99,5 +103,21 @@ implementation
 		if KeyPressed then ret:=WaitKey;
 		GetKey:=ret;
 	end;
+	
+	
+{The code below is not mine, but was written by JAB@ib.rl.ac.uk}
+procedure turn_off_cursor;
+  var num : word;
+  begin
+    port[$03D4]:=$0A; num:=port[$03D5];
+    port[$03D4]:=$0A; port[$03D5]:=num or 32;
+  end;
+  {}
+ procedure turn_on_cursor;
+  var num : word;
+  begin
+    port[$03D4]:=$0A; num:=port[$03D5];
+    port[$03D4]:=$0A; port[$03D5]:=num xor 32;
+  end;
 
 end.
