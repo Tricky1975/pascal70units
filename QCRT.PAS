@@ -27,9 +27,13 @@ implementation
 	end;
 
 	procedure WriteXY(x,y:byte;text:string);
+	var ox,oy:byte;
 	begin
+		ox:=WhereX;
+		oy:=WhereY;
 		GotoXY(x,y);
-		Write(text)
+		Write(text);
+		GotoXY(ox,oy)
 	end;
 
 
