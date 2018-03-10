@@ -31,8 +31,21 @@ interface
 
 	uses 
 		TReadStr;
+		
+	type tJCREntry = record
+		name:string;
+		storage:string; { Non 'Store' items cannot be read, but if 
+		                  if not called they should crash stuff }
+		size:Longint;
+		offset:Longint
+	end;
+	
+	var
+		showcomments:boolean;
 	
 	procedure JCR_OpenDir(var ret:file;filename:string);
+	procedure JCR_Next(var ret:file; var success:boolean; var entry:tJCREntry);
+	procedure JCR_CloseDir(var ret:file);
 
 
 implementation
@@ -96,6 +109,94 @@ implementation
 		{ From here we can begin to work, so this procedure comes at an end }
 	end;
 
+	procedure JCR_Next;
+	var
+		SuperMaintag:byte;
+		CommandTag:string;
+		Needless:string; (* Used to skip unsupported stuff *)
+		NeedlessByte:Byte;
+		EntryTag:Byte;
+		EntryField:string;
+		Entryint:longint;
+		entrystring:string;
+		entrybyte:byte; { used for boolean readouts which this unit will ignore }
+	begin
+		repeat
+			blockread(ret,SuperMainTag,1);
+			Case SuperMainTag of
+				$ff:
+					begin
+						success:=false;
+						Exit
+					end;
+				$01:
+					begin
+						TrickyReadString(ret,Commandtag);
+						if CommandTag='COMMENT' then begin
+							TrickyReadString(ret,Needless); if showcomments then writeln('Comment: '+Needless);
+							TrickyReadString(ret,Needless); if showcomments then writeln(Needless)
+						end
+						else if CommandTag='REQUIRE' then begin
+							close(ret);
+							J_Crash('REQUIRE statement in JCR6. That feature is NOT supported')
+						end
+						else if CommandTag='IMPORT' then begin
+							{ Not supported, but this can be ingored }
+							BlockRead(ret,needlessbyte,1);
+							TrickyReadString(ret,needless);
+							TrickyReadString(ret,needless)
+						end
+						else if commandTag='FILE' then repeat
+							
+							blockread(ret,entrytag,1);							
+							case entrytag of
+								$01,$02,$03:
+									begin
+										trickyreadstring(ret,EntryField);
+										with entry do
+										begin
+											case entrytag of
+												1:	begin
+														trickyreadstring(ret,entrystring);
+														if EntryField='__Entry' then name:=entrystring;
+														if EntryField='__Storage' then name:=storage
+													end;
+												2:	begin
+														blockread(ret,entrybyte,1)
+													end;
+												3:	begin
+														blockread(ret,entryint,sizeof(longint));
+														if EntryField='__Size' then size:=entryint;
+													end;
+											end;
+										end;
+									end;	
+							$ff:	begin	end {crash prevention}
+							else begin
+									close(ret);
+									J_Crash('Entry tagging error');
+								end;
+							end;
+						until entrytag=$ff
+						else begin
+							close(ret);
+							J_Crash('I don''t know what to do with command tag: '+commandtag)
+						end
+					end
+				else
+					begin
+						close(ret);
+						J_Crash('Unknown tag')
+					end;
+			end
+		until success;
+	end;
 
+	procedure JCR_closedir;
+	begin
+		close(ret);
+	end;
 
+begin
+	showcomments:=false;
 end.

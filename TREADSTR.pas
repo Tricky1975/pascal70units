@@ -19,7 +19,9 @@ implementation
 		value:='';
 		for i:=1 to l do begin
 			blockread(f,b,1);
-			value:=value+b;
+			{ Turbo Pascal has limited sizes for strings.
+			  Therefore I must truncate strings that are too long }
+			if i<127 then value:=value+b; 
 		end;
 	end;
 
