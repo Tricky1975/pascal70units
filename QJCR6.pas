@@ -27,10 +27,14 @@ unit qjcr6;
 }
 
 
+{$undef DEBUGCHAT}
+
+
 interface
 
 	uses 
-		TReadStr;
+		TReadStr,
+		Conv;
 		
 	type tJCREntry = record
 		name:string;
@@ -49,6 +53,13 @@ interface
 
 
 implementation
+
+	procedure dbg(a:string);
+	begin
+		{$IFDEF DEBUGCHAT}
+		writeln('Debug>':10,' ',a)
+		{$ENDIF}
+	end;
 
 	procedure J_CRASH(error:string);
 	begin
@@ -147,19 +158,20 @@ implementation
 							TrickyReadString(ret,needless)
 						end
 						else if commandTag='FILE' then repeat
-							
+							success:=true;
 							blockread(ret,entrytag,1);							
 							case entrytag of
 								$01,$02,$03:
 									begin
 										trickyreadstring(ret,EntryField);
+										dbg('Field='+Entryfield+' ('+jbstr(entrytag)+')');
 										with entry do
 										begin
 											case entrytag of
 												1:	begin
 														trickyreadstring(ret,entrystring);
 														if EntryField='__Entry' then name:=entrystring;
-														if EntryField='__Storage' then name:=storage
+														if EntryField='__Storage' then storage:=entrystring
 													end;
 												2:	begin
 														blockread(ret,entrybyte,1)
@@ -167,6 +179,7 @@ implementation
 												3:	begin
 														blockread(ret,entryint,sizeof(longint));
 														if EntryField='__Size' then size:=entryint;
+														if EntryField='__Offset' then offset:=entryint;
 													end;
 											end;
 										end;
