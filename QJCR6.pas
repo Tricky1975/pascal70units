@@ -1,7 +1,7 @@
 { --- START LICENSE BLOCK ---
   QJCR6.pas
   Quick JCR6 reader
-  version: 18.03.09
+  version: 18.03.10
   Copyright (C) 2018 Jeroen P. Broks
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
