@@ -25,6 +25,8 @@ interface
 	function jbval(a:string):integer;
 	function jbstr(a:longint):string;
 	
+	function jupper(a:string):string;
+	
 implementation
 
 	function jbval;
@@ -46,4 +48,15 @@ implementation
 		jbstr:=r
 	end;
 	
-end.	
+	
+	function jupper;
+	var
+		r:string;
+		i:integer;
+	begin
+		r:=a;
+		for i:=1 to length(r) do r[i]:=upcase(r[i]);
+		jupper:=r;
+	end;
+	
+end.

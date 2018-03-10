@@ -44,12 +44,25 @@ interface
 		offset:Longint
 	end;
 	
+	type tJCRFile = record
+		stream:file;
+		size,offset:longint;
+	end;
+	
 	var
 		showcomments:boolean;
 	
 	procedure JCR_OpenDir(var ret:file;filename:string);
 	procedure JCR_Next(var ret:file; var success:boolean; var entry:tJCREntry);
 	procedure JCR_CloseDir(var ret:file);
+	procedure JCR_Open(var ret:tJCRfile;resource,entry:string);
+	
+	function  JCR_Eof(var ret:tJCRfile):boolean;
+	function  JCR_GetChar(var ret:tJCRfile):char;
+	function  JCR_GetByte(var ret:tJCRfile):byte;
+	function  JCR_GetInteger(var ret:tJCRfile):integer;
+	function  JCR_GetLongInt(var ret:tJCRfile):LongInt;
+	function  JCR_GetPascalString(var ret:tJCRfile):string;
 
 
 implementation
@@ -199,7 +212,7 @@ implementation
 				else
 					begin
 						close(ret);
-						J_Crash('Unknown tag')
+						J_Crash('Unknown tag: '+jbstr(supermaintag))
 					end;
 			end
 		until success;
@@ -208,6 +221,77 @@ implementation
 	procedure JCR_closedir;
 	begin
 		close(ret);
+	end;
+	
+	
+	procedure JCR_Open;
+	var
+		e:tJCREntry;
+		s:Boolean;
+	begin
+		with ret do begin
+			{assign(stream,resource);
+			reset(stream,1);}
+			JCR_OpenDir(stream,resource);
+			repeat
+				JCR_Next(stream,s,e);
+				if not s then begin
+					close(stream);
+					J_Crash('Entry '+entry+' not found in '+resource)
+				end;
+				if jupper(e.name)=jupper(entry) then begin
+					size   := e.size;
+					offset := e.offset;
+					seek(stream,offset);
+					exit
+				end
+			until false
+		end
+	end;
+	
+	function JCR_Eof;
+	var
+		p:longint;
+	begin
+		with ret do begin
+			p:=filepos(stream);
+			JCR_Eof:=p>=offset+size
+		end
+	end;
+	
+	function JCR_GetChar;
+	var c:char;
+	begin
+		blockread(ret.stream,c,1);
+		JCR_GetChar:=c;
+	end;
+
+	function JCR_GetByte;
+	var c:Byte;
+	begin
+		blockread(ret.stream,c,1);
+		JCR_GetByte:=c;
+	end;
+
+	function JCR_GetInteger;
+	var c:Integer;
+	begin
+		blockread(ret.stream,c,sizeof(c));
+		JCR_GetInteger:=c;
+	end;
+
+	function JCR_GetLongInt;
+	var c:LongInt;
+	begin
+		blockread(ret.stream,c,sizeof(c));
+		JCR_GetLongint:=c;
+	end;
+
+	function JCR_GetPascalString;
+	var c:string;
+	begin
+		blockread(ret.stream,c,sizeof(c));
+		JCR_GetPascalString:=c;
 	end;
 
 begin

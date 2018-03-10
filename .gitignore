@@ -1,4 +1,4 @@
 *.TPU
 *.EXE
-*.MKL
+*.MKL*
 MKL*
